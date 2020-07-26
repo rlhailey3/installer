@@ -1,7 +1,7 @@
 {
     "disks": [
         {
-            "path": "/dev/sda",
+            "path": "/dev/nvme0n1p1",
             "wipe": true,
             "partitions": [
                 {
@@ -32,7 +32,7 @@
         {
             "name": "VolGroup",
             "physical": [
-                "/dev/sda3"
+                "/dev/nvme0n1p3"
             ],
             "logical": [
                 {
@@ -44,11 +44,11 @@
     ],
     "format": [
         {
-            "path": "/dev/sda1",
+            "path": "/dev/nvme0n1p1",
             "format": "fat"
         },
         {
-            "path": "/dev/sda2",
+            "path": "/dev/nvme0n1p2",
             "format": "swap"
         },
         {
@@ -62,7 +62,7 @@
             "path": "/mnt"
         },
         {
-            "device": "/dev/sda1",
+            "device": "/dev/nvme0n1p1",
             "path": "/mnt/boot"
         }
     ],
