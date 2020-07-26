@@ -24,6 +24,11 @@ class MountException(Exception):
         self.message = message
 
 
+class PacstrapException(Exception):
+    def __init__(self, message: str):
+        self.message = "Failed to install packages to /mnt"
+
+
 def runCommand(command: list) -> bool:
     process = subprocess.Popen(command, stdout=subprocess.DEVNULL)
     process.wait()
@@ -128,6 +133,13 @@ def mount(m: dict) -> None:
     if not runCommand(command):
         raise MountException(failMessage)
 
+def pacstrap(packages: list) -> None:
+    command = ["pacstrap", "/mnt"]
+    for item in packages:
+        command.append(item)
+    if not runCommand(command):
+        raise PacstrapException()
+
 def main():
     with open("./config.json") as file:
         config = json.loads(file.read())
@@ -145,5 +157,8 @@ def main():
     if "mount" in config:
         for m in config["mount"]:
             mount(m)
+
+    if "packages" in config:
+        pacstrap(config["packages"])
 
 main()
