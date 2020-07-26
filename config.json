@@ -1,0 +1,143 @@
+{
+    "disks": [
+        {
+            "path": "/dev/sda",
+            "wipe": true,
+            "partitions": [
+                {
+                    "number": 1,
+                    "start": 0,
+                    "end": "+1GB",
+                    "type": "ef00",
+                    "name": "boot"
+                },
+                {
+                    "number": 2,
+                    "start": 0,
+                    "end": "4GB",
+                    "type": "8200",
+                    "name": "swap"
+                },
+                {
+                    "number": 3,
+                    "start": 0,
+                    "end": "0",
+                    "type": "8e00",
+                    "name": "lvm-root"
+                }
+            ]
+        }
+    ],
+    "lvm": [
+        {
+            "name": "VolGroup",
+            "physical": [
+                "/dev/sda3"
+            ],
+            "logical": [
+                {
+                    "name": "root",
+                    "size": "100%FREE"
+                }
+            ]
+        }
+    ],
+    "format": [
+        {
+            "path": "/dev/sda1",
+            "format": "fat"
+        },
+        {
+            "path": "/dev/sda2",
+            "format": "swap"
+        },
+        {
+            "path": "/dev/VolGroup/root",
+            "format": "ext4"
+        }
+    ],
+    "mount": [
+        {
+            "device": "/dev/VolGroup/root",
+            "path": "/mnt"
+        },
+        {
+            "device": "/dev/sda1",
+            "path": "/mnt/boot"
+        }
+    ],
+    "packages": [
+        "base",
+        "base-devel",
+        "linux",
+        "linux-firmware",
+        "man-db",
+        "man-pages",
+        "fwupd",
+        "vim",
+        "openssh",
+        "tmux",
+        "networkmanager",
+        "firewalld",
+        "udisks2",
+        "packagekit",
+        "pcp",
+        "cockpit",
+        "cockpit-pcp",
+        "cockpit-machines",
+        "cockpit-docker",
+        "cockpit-dashboard",
+        "nodejs",
+        "npm",
+        "git",
+        "python",
+        "jdk-openjdk",
+        "clang",
+        "valgrind",
+        "gdb",
+        "intel-ucode",
+        "zip",
+        "unzip",
+        "throttled",
+        "acpi",
+        "mesa",
+        "vulkan-intel",
+        "ttf-ibm-plex",
+        "ttf-dejavu",
+        "pulseaudio",
+        "sway",
+        "swaylock",
+        "swayidle",
+        "swaybg",
+        "termite",
+        "waybar",
+        "light",
+        "grim",
+        "slurp",
+        "wofi",
+        "wl-clipboard",
+        "otf-font-awesome",
+        "powerline",
+        "powerline-fonts",
+        "powerline-vim",
+        "xorg-server-xwayland",
+        "firefox",
+        "qemu",
+        "ovmf",
+        "libvirt",
+        "ebtables",
+        "dnsmasq",
+        "bridge-utils",
+        "dmidecode",
+        "samda",
+        "docker"
+    ],
+    "services": [
+        "NetworkManager.service",
+        "firewalld.service",
+        "ebtables.service",
+        "dnsmasq.service",
+        "libvirtd.service",
+        "lenovo_fix.service"
+    ]
+}
