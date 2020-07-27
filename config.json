@@ -172,8 +172,8 @@
         "path": "/boot/loader/entries/arch.conf",
         "type": "systemd-boot",
         "title": "Arch Linux",
-        "kernel": "vmlinuz-linux.img",
-        "ucode": "intel-ucode",
+        "kernel": "vmlinuz-linux",
+        "ucode": "intel-ucode.img",
         "root": {
             "type": "lvm",
             "path": "/dev/VolGroup/root"
