@@ -162,6 +162,7 @@ def enableServices(services: list) -> None:
 def setHostname(hostname: str):
     with open("/mnt/etc/hostname", "x") as file:
         file.write(hostname)
+        file.write("\n")
 
 def createUser(user: dict) -> None:
     command =["useradd", "-m", "-g"]
@@ -199,11 +200,38 @@ def setLocalization(localization: list) -> None:
     with open("/mnt/etc/locale.conf", "x") as file:
         line = "LANG={0}".format(localization[0])
         file.write(line)
+        file.write("\n")
 
 def envVariables(environment: list) -> None:
     with open("/mnt/etc/environment", "a") as file:
         variables = "\n".join(environment)
         file.write(variables)
+        file.write("\n")
+
+def setHosts(hosts: list) -> None:
+    with open("/mnt/etc/hosts", "x") as file:
+        data = "\n".join(hosts)
+        file.write(data)
+        file.write("\n")
+
+def setSystemdBoot(loader: dict) -> None:
+    command = ["bootctl", "install"]
+    runChrootCommand(command)
+    with open(loader["path"], "x") as file:
+        file.write("title {0}\n".format(loader["title"]))
+        file.write("linux /{0}\n".format(loader["linux"]))
+        if "ucode" in loader:
+            file.write("initrd /{0}\n".format(loader["ucode"]))
+        file.write("initrd /initramfs-linux.img\n")
+        if "lvm" in loader["root"]:
+            root = loader["root"]["path"]
+        file.write("options root={0} {1}\n".format(
+            root, " ".join(loader["options"]
+        ))
+
+def setBootLoader(loader: dict) -> None:
+    if loader["type"] == "systemd-boot":
+        setSystemdBoot(loader)
 
 def main():
     with open("./config.json") as file:
@@ -244,5 +272,8 @@ def main():
     if "users" in config:
         for user in config["users"]:
             createUser(user)
+
+    if "hosts" in config:
+        setHostname(config["hosts"])
 
 main()
