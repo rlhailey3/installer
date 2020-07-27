@@ -194,6 +194,8 @@ def setLocalization(localization: list) -> None:
             "/etc/locale.gen"
         ]
         runChrootCommand(sedCommand)
+        genCommand = ["locale-gen"]
+        runChrootCommand(genCommand)
     with open("/mnt/etc/locale.conf", "x") as file:
         line = "LANG={0}".format(localization[0])
         file.write(line)
