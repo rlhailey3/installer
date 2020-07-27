@@ -25,7 +25,7 @@ class MountException(Exception):
 
 
 class PacstrapException(Exception):
-    def __init__(self, message: str):
+    def __init__(self):
         self.message = "Failed to install packages to /mnt"
 
 
@@ -209,7 +209,7 @@ def envVariables(environment: list) -> None:
         file.write("\n")
 
 def setHosts(hosts: list) -> None:
-    with open("/mnt/etc/hosts", "x") as file:
+    with open("/mnt/etc/hosts", "a") as file:
         data = "\n".join(hosts)
         file.write(data)
         file.write("\n")
@@ -217,17 +217,20 @@ def setHosts(hosts: list) -> None:
 def setSystemdBoot(loader: dict) -> None:
     command = ["bootctl", "install"]
     runChrootCommand(command)
-    with open(loader["path"], "x") as file:
+    loaderEntryPath = "/mnt{0}".format(loader["path"])
+    if not os.path.exists(os.path.dirname(loaderEntryPath)):
+        os.makedirs(os.path.dirname(loaderEntryPath))
+    with open(loaderEntryPath, "x") as file:
         file.write("title {0}\n".format(loader["title"]))
-        file.write("linux /{0}\n".format(loader["linux"]))
+        file.write("linux /{0}\n".format(loader["kernel"]))
         if "ucode" in loader:
             file.write("initrd /{0}\n".format(loader["ucode"]))
         file.write("initrd /initramfs-linux.img\n")
-        if "lvm" in loader["root"]:
+        if loader["root"]["type"] == "lvm":
             root = loader["root"]["path"]
         file.write("options root={0} {1}\n".format(
             root, " ".join(loader["options"]
-        ))
+        )))
 
 def setBootLoader(loader: dict) -> None:
     if loader["type"] == "systemd-boot":
@@ -274,7 +277,7 @@ def main():
             createUser(user)
 
     if "hosts" in config:
-        setHostname(config["hosts"])
+        setHosts(config["hosts"])
 
     if "bootloader" in config:
         setBootLoader(config["bootloader"])
