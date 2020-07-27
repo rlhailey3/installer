@@ -160,8 +160,8 @@ def enableServices(services: list) -> None:
     runChrootCommand(command)
 
 def setHostname(hostname: str):
-    command = ["hostnamectl", "set-hostname", hostname]
-    runChrootCommand(command)
+    with open("/mnt/etc/hostname", "x") as file:
+        file.writeline(hostname)
 
 def createUser(user: dict) -> None:
     command =["useradd", "-m", "-g"]
@@ -174,6 +174,8 @@ def createUser(user: dict) -> None:
         for group in user["secondarygroups"]:
             command.append(group)
     command.append(user["username"])
+    runChrootCommand(command)
+    command = ["passwd", user["username"]]
     runChrootCommand(command)
 
 def setTimezone(timezone: str):
@@ -189,21 +191,18 @@ def setLocalization(localization: list) -> None:
         sedCommand = [
             "sed",
             "-i",
-            "'s/\#{0}/{0}/'".format(item),
+            "s/\#{0}/{0}/".format(item),
             "/etc/locale.gen"
         ]
         runChrootCommand(sedCommand)
-    # localectl set-locale LANG=en_US.UTF-8
-    setLangCommand = [
-        "localectl", "set-locale",
-        "LANG={0}".format(localization[0])
-    ]
-    runChrootCommand(setLangCommand)
+    with open("/mnt/etc/locale.conf", "x") as file:
+        line = "LANG={0}".format(localization[0])
+        file.writeline(line)
 
 def envVariables(environment: list) -> None:
     with open("/mnt/etc/environment", "a") as file:
         variables = "\n".join(environment)
-        file.write(variables)
+        file.writeline(variables)
 
 def main():
     with open("./config.json") as file:
@@ -240,5 +239,9 @@ def main():
 
     if "environment" in config:
         envVariables(config["environment"])
+
+    if "users" in config:
+        for user in config["users"]:
+            createUser(user)
 
 main()
