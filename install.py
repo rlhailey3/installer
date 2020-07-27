@@ -276,4 +276,7 @@ def main():
     if "hosts" in config:
         setHostname(config["hosts"])
 
+    if "bootloader" in config:
+        setBootLoader(config["bootloader"])
+
 main()
