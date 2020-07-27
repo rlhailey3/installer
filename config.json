@@ -1,7 +1,7 @@
 {
     "disks": [
         {
-            "path": "/dev/nvme0n1p1",
+            "path": "/dev/nvme0n1",
             "wipe": true,
             "partitions": [
                 {
@@ -75,6 +75,7 @@
         "man-pages",
         "fwupd",
         "vim",
+        "bash-completion",
         "openssh",
         "tmux",
         "networkmanager",
@@ -129,15 +130,36 @@
         "dnsmasq",
         "bridge-utils",
         "dmidecode",
-        "samda",
+        "samba",
         "docker"
     ],
     "services": [
         "NetworkManager.service",
         "firewalld.service",
-        "ebtables.service",
         "dnsmasq.service",
         "libvirtd.service",
         "lenovo_fix.service"
+    ],
+    "hostname": "animus",
+    "users": [
+        {
+            "username": "richard",
+            "primarygroup": "users",
+            "secondarygroups": [
+                "wheel",
+                "libvirt",
+                "video"
+            ]
+        }
+    ],
+    "timezone": "America/Chicago",
+    "localization": [
+        "en_US.UTF-8"
+    ],
+    "environment": [
+        "EDITOR=vim",
+        "VISUAL=vim",
+        "MOZ_ENABLE_WAYLAND=1 firefox",
+        "_JAVA_AWT_WM_NONREPARENTING=1"
     ]
 }
