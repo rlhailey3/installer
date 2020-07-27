@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# TODO
+# genfstab
+# add lvm2 hook if lvm is used
+# uncomment wheel in sudoers
+
 import json
 import subprocess
 import os
