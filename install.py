@@ -29,6 +29,11 @@ class PacstrapException(Exception):
         self.message = "Failed to install packages to /mnt"
 
 
+class ChrootException(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
 def runCommand(command: list) -> bool:
     process = subprocess.Popen(command, stdout=subprocess.DEVNULL)
     process.wait()
@@ -140,6 +145,66 @@ def pacstrap(packages: list) -> None:
     if not runCommand(command):
         raise PacstrapException()
 
+def runChrootCommand(command: list) -> None:
+    chrootCommand = ["arch-chroot", "/mnt"]
+    for item in command:
+        chrootCommand.append(item)
+    failMessage = "Failed to run command: {0}".format(" ".join(chrootCommand))
+    if not runCommand(chrootCommand):
+        raise ChrootException(failMessage)
+
+def enableServices(services: list) -> None:
+    command = ["systemctl", "enable"]
+    for service in services:
+        command.append(service)
+    runChrootCommand(command)
+
+def setHostname(hostname: str):
+    command = ["hostnamectl", "set-hostname", hostname]
+    runChrootCommand(command)
+
+def createUser(user: dict) -> None:
+    command =["useradd", "-m", "-g"]
+    if "primarygroup" in user:
+        command.append(user["primarygroup"])
+    else:
+        command.append("users")
+    if "secondarygroups" in user:
+        command.append("-G")
+        for group in user["secondarygroups"]:
+            command.append(group)
+    command.append(user["username"])
+    runChrootCommand(command)
+
+def setTimezone(timezone: str):
+    zone = "/usr/share/zoneinfo/{0}".format(timezone)
+    command = ["ln", "-sf", zone, "/etc/localtime"]
+    runChrootCommand(command)
+    command = ["hwclock", "--systohc"]
+    runChrootCommand(command)
+
+def setLocalization(localization: list) -> None:
+    # sed 's/\#en_US.UTF-8/TEST/' /etc/locale.gen
+    for item in localization:
+        sedCommand = [
+            "sed",
+            "-i",
+            "'s/\#{0}/{0}/'".format(item),
+            "/etc/locale.gen"
+        ]
+        runChrootCommand(sedCommand)
+    # localectl set-locale LANG=en_US.UTF-8
+    setLangCommand = [
+        "localectl", "set-locale",
+        "LANG={0}".format(localization[0])
+    ]
+    runChrootCommand(setLangCommand)
+
+def envVariables(environment: list) -> None:
+    with open("/mnt/etc/environment", "a") as file:
+        variables = "\n".join(environment)
+        file.write(variables)
+
 def main():
     with open("./config.json") as file:
         config = json.loads(file.read())
@@ -160,5 +225,20 @@ def main():
 
     if "packages" in config:
         pacstrap(config["packages"])
+
+    if "services" in config:
+        enableServices(config["services"])
+
+    if "hostname" in config:
+        setHostname(config["hostname"])
+
+    if "timezone" in config:
+        setTimezone(config["timezone"])
+
+    if "localization" in config:
+        setLocalization(config["localization"])
+
+    if "environment" in config:
+        envVariables(config["environment"])
 
 main()
