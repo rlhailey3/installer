@@ -161,7 +161,7 @@ def enableServices(services: list) -> None:
 
 def setHostname(hostname: str):
     with open("/mnt/etc/hostname", "x") as file:
-        file.writeline(hostname)
+        file.write(hostname)
 
 def createUser(user: dict) -> None:
     command =["useradd", "-m", "-g"]
@@ -171,8 +171,7 @@ def createUser(user: dict) -> None:
         command.append("users")
     if "secondarygroups" in user:
         command.append("-G")
-        for group in user["secondarygroups"]:
-            command.append(group)
+        command.append(",".join(user["secondarygroups"]))
     command.append(user["username"])
     runChrootCommand(command)
     command = ["passwd", user["username"]]
@@ -197,12 +196,12 @@ def setLocalization(localization: list) -> None:
         runChrootCommand(sedCommand)
     with open("/mnt/etc/locale.conf", "x") as file:
         line = "LANG={0}".format(localization[0])
-        file.writeline(line)
+        file.write(line)
 
 def envVariables(environment: list) -> None:
     with open("/mnt/etc/environment", "a") as file:
         variables = "\n".join(environment)
-        file.writeline(variables)
+        file.write(variables)
 
 def main():
     with open("./config.json") as file:
