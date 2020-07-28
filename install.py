@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 
 # TODO
-# add lvm2 hook if lvm is used
+# Add message prompts based on which step is running
+# set deal with pacstrap output?
+# add user name to password change prompt
+# add additional filesystem types?
+# add additional bootloader?
+# change main() to check config.json to ensure input is valid
+# require multiple fields in config.json such as 
 
 import json
 import subprocess
@@ -226,6 +232,15 @@ def genFstab() -> None:
     with open("/mnt/etc/fstab", "a") as file:
         file.write(fstab)
 
+def enableLvmHook():
+    command = [
+        "sed".
+        "-i",
+        "'/^HOOKS/{s/block/block lvm2/}'",
+        "/mnt/etc/mkinitcpio.conf"
+    ]
+    runCommand(command)
+
 def setSystemdBoot(loader: dict) -> None:
     command = ["bootctl", "install"]
     runChrootCommand(command)
@@ -247,6 +262,9 @@ def setSystemdBoot(loader: dict) -> None:
 def setBootLoader(loader: dict) -> None:
     if loader["type"] == "systemd-boot":
         setSystemdBoot(loader)
+
+    if loader["root"]["type"] == "lvm":
+        enableLvmHook()
 
 def main():
     with open("./config.json") as file:
