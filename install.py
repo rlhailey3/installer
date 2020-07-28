@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 # TODO
-# genfstab
 # add lvm2 hook if lvm is used
-# uncomment wheel in sudoers
 
 import json
 import subprocess
@@ -219,6 +217,15 @@ def setHosts(hosts: list) -> None:
         file.write(data)
         file.write("\n")
 
+def setWheelSudo() -> None:
+    with open("/mnt/etc/sudoers.d/wheel-password", "x") as file:
+        file.write("%wheel ALL=(ALL) ALL")
+
+def genFstab() -> None:
+    fstab = subprocess.getoutput("genfstab -U /mnt")
+    with open("/mnt/etc/fstab", "a") as file:
+        file.write(fstab)
+
 def setSystemdBoot(loader: dict) -> None:
     command = ["bootctl", "install"]
     runChrootCommand(command)
@@ -280,6 +287,9 @@ def main():
     if "users" in config:
         for user in config["users"]:
             createUser(user)
+
+    setWheelSudo()
+    genFstab()
 
     if "hosts" in config:
         setHosts(config["hosts"])
