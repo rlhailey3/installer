@@ -234,12 +234,20 @@ def genFstab() -> None:
 
 def enableLvmHook():
     command = [
-        "sed".
+        "sed",
         "-i",
         "'/^HOOKS/{s/block/block lvm2/}'",
         "/mnt/etc/mkinitcpio.conf"
     ]
     runCommand(command)
+    
+def mkinitcpio() -> None:
+    command = [
+        "mkinitcpio",
+        "-p",
+        "linux"
+    ]
+    runChrootCommand(command)
 
 def setSystemdBoot(loader: dict) -> None:
     command = ["bootctl", "install"]
@@ -265,6 +273,8 @@ def setBootLoader(loader: dict) -> None:
 
     if loader["root"]["type"] == "lvm":
         enableLvmHook()
+        
+    mkinitcpio()
 
 def main():
     with open("./config.json") as file:
