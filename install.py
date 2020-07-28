@@ -8,6 +8,7 @@
 # add additional bootloader?
 # change main() to check config.json to ensure input is valid
 # require multiple fields in config.json such as 
+# copy user dotfiles from a github repo
 
 import json
 import subprocess
