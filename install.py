@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
 # TODO
-# Add message prompts based on which step is running
-# set deal with pacstrap output?
-# add user name to password change prompt
+# show pacstrap output, add commandline noconfirm option
 # add additional filesystem types?
 # add additional bootloader?
-# change main() to check config.json to ensure input is valid
-# require multiple fields in config.json such as 
-# copy user dotfiles from a github repo
+# add detailed comments for classes / functions
 
 import json
 import subprocess
 import os
+
+class ConfigurationException(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
 
 class SgdiskException(Exception):
     def __init__(self, message: str):
@@ -77,7 +78,9 @@ def partitionDisk(disk):
 def partition(disks) -> None:
     for disk in disks:
         if disk["wipe"]:
+            print("Wiping {0}".format(disk["path"]))
             wipeDisk(disk)
+        print("Partitioning {0}".format(disk["path"]))
         partitionDisk(disk)
 
 def pvcreate(physical: str) -> None:
@@ -99,6 +102,7 @@ def vgcreate(lv: dict) -> None:
 def lvcreate(lv: dict) -> None:
     # lvcreate -L size groupName -n volumename [device]
     for logical in lv["logical"]:
+        print("Creating logical volume {0}".format(logical["name"]))
         failMessage = "Failed to create logical volume {0} on group {1}".format(
             logical["name"], lv["name"]
         )
@@ -120,6 +124,7 @@ def lvcreate(lv: dict) -> None:
 
 def lvm(lvm: list) -> None:
     for lv in lvm:
+        print("Creating Volume Group {0}".format(lv["name"]))
         vgcreate(lv)
         lvcreate(lv)
 
@@ -186,7 +191,13 @@ def createUser(user: dict) -> None:
     command.append(user["username"])
     runChrootCommand(command)
     command = ["passwd", user["username"]]
-    runChrootCommand(command)
+    while True:
+        try:
+            print("Set password for {0}".format(user["username"]))
+            runChrootCommand(command)
+            break
+        except ChrootException:
+            continue
 
 def setTimezone(timezone: str):
     zone = "/usr/share/zoneinfo/{0}".format(timezone)
@@ -237,7 +248,7 @@ def enableLvmHook():
     command = [
         "sed",
         "-i",
-        "'/^HOOKS/{s/block/block lvm2/}'",
+        "/^HOOKS/{s/block/block lvm2/}",
         "/mnt/etc/mkinitcpio.conf"
     ]
     runCommand(command)
@@ -276,44 +287,68 @@ def setBootLoader(loader: dict) -> None:
         enableLvmHook()
         
     mkinitcpio()
-
+    
 def main():
     with open("./config.json") as file:
         config = json.loads(file.read())
 
     if "disks" in config:
+        print("Partitioning Disks")
         partition(config["disks"])
+    else:
+        failMessage = "Missing \"disks\" in json configuration"
+        raise ConfigurationException(failMessage)
 
     if "lvm" in config:
+        print("Configuring LVM")
         lvm(config["lvm"])
 
     if "format" in config:
+        print("Formatting disks")
         for f in config["format"]:
+            print("Formatting {0} as {1}".format(f["path"], f["format"]))
             formatPartition(f)
+    else:
+        failMessage = "Missing \"format\" in json configuration"
+        raise ConfigurationException(failMessage)
 
     if "mount" in config:
+        print("Mounting drives")
         for m in config["mount"]:
+            print("Mounting {0} to {1}".format(m["device"], m["path"]))
             mount(m)
+    else:
+        failMessage = "Missing \"mount\" in json configuration"
+        raise ConfigurationException(failMessage)
 
     if "packages" in config:
+        print("Performing pacstrap on /mnt")
         pacstrap(config["packages"])
+    else:
+        failMessage = "Missing \"pacstrap\" in json configuration"
 
     if "services" in config:
+        print("Enabling services")
         enableServices(config["services"])
 
     if "hostname" in config:
+        print("Setting hostname to {0}".format(config["hostname"]))
         setHostname(config["hostname"])
 
     if "timezone" in config:
+        print("Setting timezone to {0}".format(config["timezone"]))
         setTimezone(config["timezone"])
 
     if "localization" in config:
+        print("Setting localization")
         setLocalization(config["localization"])
 
     if "environment" in config:
+        print("Configuring /etc/environment")
         envVariables(config["environment"])
 
     if "users" in config:
+        print("Creating Users")
         for user in config["users"]:
             createUser(user)
 
@@ -321,9 +356,11 @@ def main():
     genFstab()
 
     if "hosts" in config:
+        print("Configuring /etc/hosts")
         setHosts(config["hosts"])
 
     if "bootloader" in config:
+        print("Configuring bootloader")
         setBootLoader(config["bootloader"])
 
 main()

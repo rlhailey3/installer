@@ -131,7 +131,9 @@
         "bridge-utils",
         "dmidecode",
         "samba",
-        "docker"
+        "docker",
+        "virt-install",
+        "virt-manager"
     ],
     "services": [
         "NetworkManager.service",
